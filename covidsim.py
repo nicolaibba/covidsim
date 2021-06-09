@@ -1,97 +1,93 @@
 import random
-from statistics import mean
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
+random.seed(0)
 class Person:
-    def __init__(self, id, age, relations, distance):
-        self.id = id
-        self.age = age
-        self.sick = False
-        self.days = 0
-        self.relations = relations
-        self.distance = distance
-        self.immune = False
-        self.dead = False
-    def getSick(self):
-        chance = random.randint(1,4)
-        if chance == 1:
-            self.sick = True
-            person.days +=1
-        if self.sick == True and self.age > 70:
-            self.dead = True
-def genRel(id):
-    rangeids = []
-    for i in range(100):
-        i = random.randint(max(0,id - 50), min(popSize - 1, id + 50))
-        if not i in rangeids:
-            rangeids.append(i)
-    rels = random.randint(5,len(rangeids))
-    ids = np.random.choice(rangeids, rels, replace=False)
-    return ids
+    def __init__(self, name = ''):
+        self.name = name
+        self.is_sick = False
+        self.day_sick = None
+        self.contageous = False
+        self.quarantined = False
+        self.recovered = False
+    
+    def getSick(self, day):
+        if self.recovered == False:
+            if self.is_sick == False:
+                if random.random() < .50:
+                    self.is_sick = True
+                    self.day_sick = day
+    
+    def quarantine(self):
+        self.quarantined = True
+        
+    def contageous(self):
+        self.contageous = True
+    
+    def recover(self):
+        self.is_sick = False
+        self.recovered = True
+        self.quarantined = False
+        self.contegeous = False
+   
+class Population:
+    def __init__(self, size = None, recovery_time = 10, quarantine_time = 2, social_rate = .8):
+        self.size = size
+        self.recovery_time = recovery_time
+        self.quarantine_time = quarantine_time
+        self.distancing_rate = social_rate
+        self.people = []
+        self.day = 0
+        self.pzero = None
+        self.sicks = []
+        self.recovered = []
+        self.create()
+        self.patientZero()
+        self.contact()
+        
+    def create(self):
+        for i in range(self.size):
+            self.people.append(Person(name=i))
+            
+    def patientZero(self):
+        # Randomize patient 0:
+        s = random.choice(self.people)
+        s.is_sick = True
+        s.contageous = True
+        s.day_sick = 0
+        self.sicks.append(s.name)
+        #s.quarantined = True
+        self.pzero = s
+        
+    
+    def newDay(self):
+        self.day +=1
+        for person in self.people:
+            if person.is_sick == True:
+                if self.day == person.day_sick + 1: person.contageous = True
+                if self.day == person.day_sick + self.quarantine_time + 1: person.quarantine()
+                if self.day == person.day_sick + self.recovery_time: person.recover()
+        self.contact()
+        self.sicks = [i.name for i in pop.people if i.is_sick == True]
+        self.recovered = [i.name for i in pop.people if i.recovered == True]
 
-popSize = 10000
-duration = 10
-socialDistRate = 80
-pop = []
-population = []
-sick = []
-daySicks = []
-immRate = []
 
-for i in range(popSize):
-    population.append(i)
-    relations = genRel(i)
-    age = random.randint(10,95)
-    d = random.randint(0,100)
-    if d <= socialDistRate:
-        d = 1
-    else:
-        d = 0
-    pop.append(Person(i, age, relations, d))
-ptZero = random.randint(0,popSize-1)
-pop[ptZero].sick = True
-sick.append(ptZero)
-del population[ptZero]
-days = []
-errors = 0
-immune = 0
-count = 0
-dayRate = 0.
-i = 1
-popMrate = 0.
-deceased = 0
-while dayRate < .8:
-    days.append(i)
-    i +=1
-    for person in pop:
-        if person.sick == False and person.immune == False:
-            for j in person.relations:
-                rnd = random.randint(0,100)
-                contact = False
-                if person.distance == 1:
-                    if rnd <= 5:
-                        contact = True
-                else:
-                    if rnd <= 90:
-                        contact = True
-                if pop[j].sick == True and contact == True:
-                    if person.sick == False:
-                        person.getSick()
-                        if person.sick == True:
-                            sick.append(person.id)
-                            del population[population.index(person.id)]
-        else:
-            if person.days >= duration and person.sick == True:
-                person.sick = False
-                person.immune = True
-                immune +=1 
-                del sick[sick.index(person.id)]
-            else:
-                person.days +=1
-    daySicks.append(len(sick))
-    dayRate = immune / len(pop)
-    immRate.append(dayRate)
-    count +=1
-plt.plot(days,daySicks)
-plt.show()
+    def contact(self):
+        basket = []
+        for person in self.people:
+            if person.quarantined == False: basket.append(person)
+        basket = random.sample(basket, round(len(basket)* self.distancing_rate))
+        random.shuffle(basket)
+        for p in basket:
+            pickfrom = [i for i in basket if i != p]
+            samplesize = 2
+            if samplesize > len(pickfrom): samplesize = len(pickform)
+            if samplesize > 0:
+                contacts = random.sample(pickfrom, samplesize)
+
+                for person in contacts:
+                    if p.contageous:
+                        if person.recovered == False: person.getSick(self.day)
+                    if person.contageous:
+                        if p.recovered == False: p.getSick(self.day)
