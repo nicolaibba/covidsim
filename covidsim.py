@@ -91,3 +91,18 @@ class Population:
                         if person.recovered == False: person.getSick(self.day)
                     if person.contageous:
                         if p.recovered == False: p.getSick(self.day)
+                            
+    def run(self):
+            sicks = [1]
+            while True:
+                self.newDay()
+                sicks.append(len(self.sicks))
+                if sicks[-1] == 0: break
+            return sicks
+
+pop = Population(size = 500, recovery_time = 10, quarantine_time = 3, social_rate = .3)
+sicks = np.array(pop.run())
+plt.figure()
+
+plt.plot(sicks)
+plt.show()
