@@ -60,7 +60,6 @@ class Population:
         #s.quarantined = True
         self.pzero = s
         
-    
     def newDay(self):
         self.day +=1
         for person in self.people:
@@ -137,4 +136,8 @@ for i in range(1, number_of_subplots):
     y = data[i][1]
     ax.plot(x,y)
     ax.title.set_text("Days before quarantining: "+ str(i))
+plt.show()
+
+plt.figure()
+plt.plot(data[1][2][1])
 plt.show()
