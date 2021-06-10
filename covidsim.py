@@ -69,8 +69,8 @@ class Population:
                 if self.day == person.day_sick + self.quarantine_time + 1: person.quarantine()
                 if self.day == person.day_sick + self.recovery_time: person.recover()
         self.contact()
-        self.sicks = [i.name for i in pop.people if i.is_sick == True]
-        self.recovered = [i.name for i in pop.people if i.recovered == True]
+        self.sicks = [i.name for i in self.people if i.is_sick == True]
+        self.recovered = [i.name for i in self.people if i.recovered == True]
 
 
     def contact(self):
@@ -93,16 +93,48 @@ class Population:
                         if p.recovered == False: p.getSick(self.day)
                             
     def run(self):
-            sicks = [1]
-            while True:
-                self.newDay()
-                sicks.append(len(self.sicks))
-                if sicks[-1] == 0: break
-            return sicks
+        dailySicks = [1]
+        while True:
+            self.newDay()
+            dailySicks.append(len(self.sicks))
+            if dailySicks[-1] == 0: break
+        return dailySicks
 
-pop = Population(size = 500, recovery_time = 10, quarantine_time = 3, social_rate = .3)
-sicks = np.array(pop.run())
-plt.figure()
+def runs(size = 500, social_rate = [.3], quarantine_time = [2]):
+    try:
+        output = {}
+        
+        for time in quarantine_time:
+            output[time] = [[], [], []]
+            
+            for rate in social_rate:
+        
+                pop = Population(size = size, recovery_time = 10, quarantine_time = time, social_rate = rate)
+                a = np.array(pop.run())
+                output[time][0].append(rate)
+                output[time][1].append(np.max(a))
+                output[time][2].append(a)
+                
+        return output
+    
+    except Exception as e:
+        print(e)
+     
+    
+QUARANTINE_TIME = [i for i in range(1,5)]
+SOCIAL_RATE = [i / 10 for i in range(3, 10, 1)]
 
-plt.plot(sicks)
+data = runs(size = 500, social_rate = SOCIAL_RATE, quarantine_time = QUARANTINE_TIME)
+
+number_of_subplots= len(QUARANTINE_TIME)+1
+x = SOCIAL_RATE
+v = 0
+fig = plt.figure(figsize=(20, 18), dpi=80, facecolor='w', edgecolor='k')
+for i in range(1, number_of_subplots):
+    v = v+1
+    ax = fig.add_subplot(number_of_subplots,1,v)
+    
+    y = data[i][1]
+    ax.plot(x,y)
+    ax.title.set_text("Days before quarantining: "+ str(i))
 plt.show()
